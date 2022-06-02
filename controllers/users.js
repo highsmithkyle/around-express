@@ -1,31 +1,112 @@
-const path = require("path");
-const { readFile } = require("../helpers");
+const User = require("../models/user");
 
-const USERS_PATH = path.join(__dirname, "../data/users.json");
+const {
+  HTTP_SUCCESS,
+  HTTP_CREATED,
+  HTTP_BAD_REQUEST,
+  HTTP_NOT_FOUND,
+  HTTP_INTERNAL_SERVER_ERROR,
+} = require("../utils/error");
+
+const createUser = (req, res) => {
+  const { name, about, avatar } = req.body;
+
+  User.create({ name, about, avatar })
+    .then((user) => res.status(HTTP_CREATED).send({ data: user }))
+    .catch((error) => {
+      if (error.name === "ValidationError") {
+        res.status(HTTP_BAD_REQUEST).send({
+          message: error.message,
+        });
+      } else {
+        res
+          .status(HTTP_INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occured" });
+      }
+    });
+};
 
 const getUsers = (req, res) => {
-  readFile(USERS_PATH)
-    .then((users) => res.send({ data: JSON.parse(users) }))
+  User.find({})
+    .then((users) => res.status(HTTP_SUCCESS).send({ data: users }))
     .catch(() =>
-      res.status(500).send({ message: "An error has occured on the server" })
+      res
+        .status(HTTP_INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occured on the server" })
     );
 };
 
 const getUser = (req, res) => {
-  readFile(USERS_PATH)
-    .then((users) => {
-      const { id } = req.params;
-      const parseUsersData = JSON.parse(users);
-      const user = parseUsersData.find(({ _id: userId }) => userId === id);
-      if (!user) res.status(404).send({ message: "User ID not found" });
-      else res.send({ data: user });
+  const { userId } = req.params;
+  User.findById(userId)
+    .orFail(() => {
+      const error = new Error("No user matches specified ID");
+      error.statusCode = HTTP_NOT_FOUND;
+      throw error;
     })
-    .catch(() =>
-      res.status(500).send({ message: "An error occurred on the server" })
-    );
+    .then((user) => res.send({ data: user }))
+    .catch((error) => {
+      if (error.name === "CastError") {
+        res.status(HTTP_BAD_REQUEST).send({ message: "Invalid user ID" });
+      } else if (error.statusCode === HTTP_NOT_FOUND) {
+        res.status(HTTP_NOT_FOUND).send({ message: error.message });
+      } else {
+        res
+          .status(HTTP_INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occured on the server" });
+      }
+    });
+};
+
+const updateUser = (req, res) => {
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+    .orFail(() => {
+      const error = new Error("No user matches specified ID");
+      error.statusCode = HTTP_NOT_FOUND;
+      throw error;
+    })
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((error) => {
+      if (error.name === "CastError") {
+        res.status(HTTP_BAD_REQUEST).send({ message: "Invalid user ID" });
+      } else if (error.statusCode === HTTP_NOT_FOUND) {
+        res.status(HTTP_NOT_FOUND).send({ message: error.message });
+      } else {
+        res
+          .status(HTTP_INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occured on the server" });
+      }
+    });
+};
+
+const updateAvatar = (req, res) => {
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+    .orFail(() => {
+      const error = new Error("No user matches specified ID");
+      error.statusCode = HTTP_NOT_FOUND;
+      throw error;
+    })
+    .then((user) => {
+      if (error.name === "CastError") {
+        res.status(HTTP_BAD_REQUEST).send({ message: "Invalid user ID" });
+      } else if (error.statusCode === HTTP_NOT_FOUND) {
+        res.status(HTTP_NOT_FOUND).send({ message: error.message });
+      } else {
+        res
+          .status(HTTP_INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occured on the server" });
+      }
+    });
 };
 
 module.exports = {
-  getUser,
+  createUser,
   getUsers,
+  getUser,
+  updateUser,
+  updateAvatar,
 };

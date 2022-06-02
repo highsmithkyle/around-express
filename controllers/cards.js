@@ -1,5 +1,3 @@
-const card = require("../models/card");
-const { update } = require("../models/card");
 const Card = require("../models/card");
 
 const {
@@ -10,8 +8,6 @@ const {
   HTTP_INTERNAL_SERVER_ERROR,
 } = require("../utils/error");
 
-// get request
-
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.status(HTTP_SUCCESS).send({ data: cards }))
@@ -21,8 +17,6 @@ const getCards = (req, res) => {
         .send({ message: "An error has occured on the server" });
     });
 };
-
-// post request
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -41,8 +35,6 @@ const createCard = (req, res) => {
       }
     });
 };
-
-// delete
 
 const deleteCard = (req, res) => {
   const { cardId } = req.params;
@@ -69,9 +61,7 @@ const deleteCard = (req, res) => {
 };
 
 const updateLike = (req, res, method) => {
-  const currentUser = req.user._id;
   const { cardId } = req.params;
-
   Card.findByIdAndUpdate(
     cardId,
     { [method]: { likes: req.user._id } },
@@ -87,7 +77,7 @@ const updateLike = (req, res, method) => {
     })
     .catch((error) => {
       if (error.name === "CastError") {
-        res.status(HTTP_BAD_REQUEST).send({ message: "invalid card Id" });
+        res.status(HTTP_BAD_REQUEST).send({ message: "Invalid card Id" });
       } else if (error.statusCode === "HTTP_NOT_FOUND") {
         res.status(HTTP_NOT_FOUND).send({ message: error.message });
       } else {
@@ -99,18 +89,12 @@ const updateLike = (req, res, method) => {
 };
 
 const likeCard = (req, res) => updateLike(req, res, "$addToSet");
-const dislikeCard = (req, res) => updateLike(req, res, "$pull");
+const unlikeCard = (req, res) => updateLike(req, res, "$pull");
 
 module.exports = {
   getCards,
   createCard,
   deleteCard,
   likeCard,
-  dislikeCard,
+  unlikeCard,
 };
-
-// const path = require("path");
-// const { readFile } = require("../helpers");
-// const { NOTFOUND } = require("dns");
-
-// const USERS_PATH = path.join(__dirname, "../data/cards.json");
