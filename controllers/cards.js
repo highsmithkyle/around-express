@@ -44,16 +44,16 @@ const deleteCard = (req, res) => {
       error.statusCode = HTTP_NOT_FOUND;
       throw error;
     })
-    .then((cards) => Card.deleteOne(cards).then((card) => res.send({ data: card })))
+    .then((cards) =>
+      Card.deleteOne(cards).then((card) => res.send({ data: card })),
+    )
     .catch((error) => {
       if (error.name === 'CastError') {
         res.status(HTTP_BAD_REQUEST).send({ message: 'Invalid card id' });
       } else if (error.statusCode === HTTP_NOT_FOUND) {
-        res.status(HTTP_NOT_FOUND).send({ message: error.message });
+        res.status(HTTP_NOT_FOUND).send({ message: 'testing' });
       } else {
-        res
-          .status(HTTP_INTERNAL_SERVER_ERROR)
-          .send({ message: 'An error occurred' });
+        res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: 'testing' });
       }
     });
 };
