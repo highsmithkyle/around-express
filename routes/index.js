@@ -7,9 +7,7 @@ router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
 router.use((req, res) => {
-  res
-    .status(HTTP_BAD_REQUEST)
-    .send({ message: 'The requested resource was not found' });
+  res.status(HTTP_BAD_REQUEST).send({ message: 'BAD REQUEST --- TESTING' });
 });
 
 module.exports = router;
