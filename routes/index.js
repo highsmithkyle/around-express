@@ -7,7 +7,7 @@ router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
 router.use((req, res) => {
-  res.status(HTTP_BAD_REQUEST).send({ message: 'BAD REQUEST --- TESTING' });
+  res.status(HTTP_BAD_REQUEST).send({ message: 'Error' });
 });
 
 module.exports = router;
